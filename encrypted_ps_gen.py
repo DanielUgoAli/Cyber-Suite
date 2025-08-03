@@ -5,7 +5,12 @@ from cryptography.fernet import Fernet
 # Step 1: Generate a random strong password
 def generate_password(length=16):
     characters = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(random.choice(characters) for _ in range(length))
+import secrets
+
+# Step 1: Generate a random strong password
+def generate_password(length=16):
+    characters = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(secrets.choice(characters) for _ in range(length))
     return password
 
 # Step 2: Generate an encryption key
