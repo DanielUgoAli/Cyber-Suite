@@ -49,7 +49,39 @@ def generate_and_compare(count, version, user_ips):
             if ip6 in user_ips:
                 print(f"[!] MASKED: {ip6} matches an inputted IP.")
                 masked_ips.append((ip6, "IPv6"))
-
+    if version == "both":
+        num_ipv4 = count // 2
+        num_ipv6 = count - num_ipv4
+        # Alternate adding IPv4 and IPv6 for better distribution
+        for i in range(count):
+            if i % 2 == 0 and num_ipv4 > 0:
+                ip4 = generate_random_ipv4()
+                generated_ips.append((ip4, "IPv4"))
+                if ip4 in user_ips:
+                    print(f"[!] MASKED: {ip4} matches an inputted IP.")
+                    masked_ips.append((ip4, "IPv4"))
+                num_ipv4 -= 1
+            elif num_ipv6 > 0:
+                ip6 = generate_random_ipv6()
+                generated_ips.append((ip6, "IPv6"))
+                if ip6 in user_ips:
+                    print(f"[!] MASKED: {ip6} matches an inputted IP.")
+                    masked_ips.append((ip6, "IPv6"))
+                num_ipv6 -= 1
+    elif version == "ipv4":
+        for _ in range(count):
+            ip4 = generate_random_ipv4()
+            generated_ips.append((ip4, "IPv4"))
+            if ip4 in user_ips:
+                print(f"[!] MASKED: {ip4} matches an inputted IP.")
+                masked_ips.append((ip4, "IPv4"))
+    elif version == "ipv6":
+        for _ in range(count):
+            ip6 = generate_random_ipv6()
+            generated_ips.append((ip6, "IPv6"))
+            if ip6 in user_ips:
+                print(f"[!] MASKED: {ip6} matches an inputted IP.")
+                masked_ips.append((ip6, "IPv6"))
     return generated_ips, masked_ips
 
 # === MAIN ===
