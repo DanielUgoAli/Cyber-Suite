@@ -1,49 +1,83 @@
-import random
-import string
-from cryptography.fernet import Fernet
-
-# Step 1: Generate a random strong password
-def generate_password(length=16):
-    characters = string.ascii_letters + string.digits + string.punctuation
 import secrets
+import string
+import json
+from cryptography.fernet import Fernet
+from pathlib import Path
 
-# Step 1: Generate a random strong password
+DATA_FILE = Path("encrypted_passwords.json")
+
+# === Core Functions ===
+
 def generate_password(length=16):
     characters = string.ascii_letters + string.digits + string.punctuation
-    password = ''.join(secrets.choice(characters) for _ in range(length))
-    return password
+    return ''.join(secrets.choice(characters) for _ in range(length))
 
-# Step 2: Generate an encryption key
 def generate_key():
-    key = Fernet.generate_key()
-    return key
+    return Fernet.generate_key()
 
-# Step 3: Encrypt the password
-def encrypt_password(password, key):
-    fernet = Fernet(key)
-    encrypted = fernet.encrypt(password.encode())
+def encrypt_password(password, key, save=True):
+    f = Fernet(key)
+    encrypted = f.encrypt(password.encode())
+    if save:
+        save_encrypted_password(encrypted.decode(), key.decode())
     return encrypted
 
-# Step 4: Decrypt the password
 def decrypt_password(encrypted_password, key):
-    fernet = Fernet(key)
-    decrypted = fernet.decrypt(encrypted_password).decode()
-    return decrypted
+    f = Fernet(key)
+    return f.decrypt(encrypted_password.encode()).decode()
 
-# # Step 5: Run the process
-# if __name__ == "__main__":
-#     # Generate password
-#     password = generate_password()
-#     print(f"Generated Password: {password}")
+def save_encrypted_password(encrypted, key):
+    entry = {"key": key, "encrypted_password": encrypted}
+    if DATA_FILE.exists():
+        try:
+            with open(DATA_FILE, "r") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            data = []
+    else:
+        data = []
+    data.append(entry)
+    with open(DATA_FILE, "w") as f:
+        json.dump(data, f, indent=4)
 
-#     # Generate encryption key
-#     key = generate_key()
-#     print(f"Encryption Key (save this safely!): {key.decode()}")
+def list_saved_passwords():
+    if not DATA_FILE.exists():
+        return []
+    with open(DATA_FILE, "r") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return []
 
-#     # Encrypt the password
-#     encrypted_password = encrypt_password(password, key)
-#     print(f"Encrypted Password: {encrypted_password.decode()}")
+# === Example Usage ===
 
-#     # Decrypt to verify
-#     decrypted_password = decrypt_password(encrypted_password, key)
-#     print(f"Decrypted Password (for verification): {decrypted_password}")
+if __name__ == "__main__":
+    # Generate password
+    password = generate_password()
+    print(f"Generated Password: {password}")
+
+    # Generate encryption key
+    key = generate_key()
+    print(f"Encryption Key: {key.decode()}")
+
+    # Encrypt and save password
+    encrypted = encrypt_password(password, key)
+    print(f"Encrypted Password: {encrypted.decode()}")
+
+    # List saved entries
+    print("\nSaved Entries:")
+    entries = list_saved_passwords()
+    for entry in entries:
+        print(entry)
+
+    # Optional: Decrypt latest
+    print("\nDecryption Test:")
+    if entries:
+        last_entry = entries[-1]
+        try:
+            decrypted = decrypt_password(last_entry["encrypted_password"], last_entry["key"])
+            print(f"Decrypted Password: {decrypted}")
+        except Exception as e:
+            print(f"Failed to decrypt: {e}")
+    else:
+        print("No entries to decrypt.")
