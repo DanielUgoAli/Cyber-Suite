@@ -49,9 +49,9 @@ def list_saved_passwords():
         except json.JSONDecodeError:
             return []
 
-# === Example Usage ===
+# === Run Logic ===
 
-if __name__ == "__main__":
+def run():
     # Generate password
     password = generate_password()
     print(f"Generated Password: {password}")
@@ -81,3 +81,6 @@ if __name__ == "__main__":
             print(f"Failed to decrypt: {e}")
     else:
         print("No entries to decrypt.")
+
+if __name__ == "__main__":
+    run()
