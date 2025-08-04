@@ -1,0 +1,7 @@
+customtkinter
+cryptography
+python-nmap
+requests
+colorama
+ipaddress
+json
