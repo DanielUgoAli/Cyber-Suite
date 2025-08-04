@@ -10,7 +10,7 @@ from datetime import datetime
 
 # Import our modules
 import encrypted_ps_gen
-import ip
+import ipgen as ip
 import vas
 
 def print_banner():
@@ -33,7 +33,8 @@ def print_menu():
     print("1. 🔐 Password Generator & Encryption")
     print("2. 🌐 IP Address Generator & Mask Detector") 
     print("3. 🔍 Vulnerability Scanner")
-    print("4. ❌ Exit")
+    print("4. 🖥️  Launch GUI Interface")
+    print("5. ❌ Exit")
     print("-" * 40)
 
 def password_tool():
@@ -124,6 +125,19 @@ def vulnerability_scanner():
         print(f"❌ Scanner error: {e}")
         print("Make sure nmap is installed and you have proper permissions.")
 
+def launch_gui():
+    """Launch the GUI interface"""
+    try:
+        print("\n🖥️  Launching GUI interface...")
+        import gui
+        gui.main()
+    except ImportError as e:
+        print(f"❌ Missing required package for GUI: {e}")
+        print("📦 Install GUI dependencies with:")
+        print("   pip install customtkinter")
+    except Exception as e:
+        print(f"❌ GUI launch error: {e}")
+
 def main():
     """Main program loop"""
     print_banner()
@@ -131,7 +145,7 @@ def main():
     
     while True:
         try:
-            choice = input("Select tool (1-4): ").strip()
+            choice = input("Select tool (1-5): ").strip()
             
             if choice == '1':
                 password_tool()
@@ -140,10 +154,12 @@ def main():
             elif choice == '3':
                 vulnerability_scanner()
             elif choice == '4':
+                launch_gui()
+            elif choice == '5':
                 print("\n👋 Thanks for using Cyber-Suite! Stay secure!")
                 sys.exit(0)
             else:
-                print("❌ Invalid choice. Please select 1-4.")
+                print("❌ Invalid choice. Please select 1-5.")
                 
         except KeyboardInterrupt:
             print("\n\n👋 Goodbye! Stay secure!")
