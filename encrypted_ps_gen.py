@@ -15,10 +15,11 @@ def generate_password(length=16):
 def generate_key():
     return Fernet.generate_key()
 
-def encrypt_password(password, key):
+def encrypt_password(password, key, save=True):
     f = Fernet(key)
     encrypted = f.encrypt(password.encode())
-    save_encrypted_password(encrypted.decode(), key.decode())
+    if save:
+        save_encrypted_password(encrypted.decode(), key.decode())
     return encrypted
 
 def decrypt_password(encrypted_password, key):
@@ -65,13 +66,18 @@ if __name__ == "__main__":
 
     # List saved entries
     print("\nSaved Entries:")
-    for entry in list_saved_passwords():
+    entries = list_saved_passwords()
+    for entry in entries:
         print(entry)
 
     # Optional: Decrypt latest
     print("\nDecryption Test:")
-    try:
-        decrypted = decrypt_password(entry["encrypted_password"], entry["key"])
-        print(f"Decrypted Password: {decrypted}")
-    except Exception as e:
-        print(f"Failed to decrypt: {e}")
+    if entries:
+        last_entry = entries[-1]
+        try:
+            decrypted = decrypt_password(last_entry["encrypted_password"], last_entry["key"])
+            print(f"Decrypted Password: {decrypted}")
+        except Exception as e:
+            print(f"Failed to decrypt: {e}")
+    else:
+        print("No entries to decrypt.")
