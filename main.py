@@ -31,7 +31,7 @@ def print_menu():
     """Display the main menu options"""
     print("\n🔧 Available Tools:")
     print("1. 🔐 Password Generator & Encryption")
-    print("2. 🌐 IP Address Generator & Mask Detector") 
+    print("2. 🌐 IP Address Generator & Flag Detector") 
     print("3. 🔍 Vulnerability Scanner")
     print("4. 🖥️  Launch GUI Interface")
     print("5. ❌ Exit")
@@ -83,8 +83,8 @@ def password_tool():
             print("❌ Invalid option. Please try again.")
 
 def ip_tool():
-    """Handle IP generation and masking"""
-    print("\n🌐 IP ADDRESS GENERATOR & MASK DETECTOR")
+    """Handle IP generation and flagging detection"""
+    print("\n🌐 IP ADDRESS GENERATOR & FLAG DETECTOR")
     print("-" * 40)
     
     # Use the existing functionality from ip.py
@@ -92,7 +92,7 @@ def ip_tool():
     count, version = ip.get_user_config()
     
     print("\n[*] Generating and checking IPs...\n")
-    generated, masked = ip.generate_and_compare(count, version, user_ips)
+    generated, flagged = ip.generate_and_compare(count, version, user_ips)
     
     # Display results
     print("\n=== Generated IP Addresses ===")
@@ -101,14 +101,14 @@ def ip_tool():
     
     print("\n=== Summary Report ===")
     print(f"Total IPs Generated: {len(generated)}")
-    print(f"Total Masked IPs Detected: {len(masked)}")
+    print(f"Total Flagged IPs Detected: {len(flagged)}")
     
-    if masked:
-        print("\nMasked IPs:")
-        for ip_addr, ip_type in masked:
+    if flagged:
+        print("\nFlagged IPs:")
+        for ip_addr, ip_type in flagged:
             print(f"- {ip_addr} [{ip_type}]")
     else:
-        print("✅ No masked IPs found.")
+        print("✅ No flagged IPs found.")
 
 def vulnerability_scanner():
     """Handle vulnerability scanning"""
