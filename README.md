@@ -107,11 +107,6 @@ Modern dark theme interface with:
 
 ## ⚖️ Legal Notice
 
-This tool is designed for:
-- **Educational purposes**
-- **Authorized security testing**
-- **Personal learning and development**
-
 **Important**: Users are responsible for ensuring compliance with applicable laws and regulations. Only use this tool on systems you own or have explicit permission to test.
 
 ## 🤝 Contributing
