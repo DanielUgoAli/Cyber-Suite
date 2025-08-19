@@ -121,7 +121,7 @@ This project is open source. Please use responsibly and ethically.
 - GitHub: [@DanielUgoAli](https://github.com/DanielUgoAli)
 - GitHub: [@Isaac M.](https://github.com/ski04)
 - GitHub: [@Sunday Samuel](https://github.com/sundaysamuel)
-- GitHub: [@Abba Yahaya](https://https://github.com/ay-wq0)
+- GitHub: [@Abba Yahaya](https://github.com/ay-wq0)
 
 
 ## 🆘 Support
