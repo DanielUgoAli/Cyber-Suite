@@ -1,6 +1,6 @@
 import customtkinter as ctk
 import tkinter as tk
-from tkinter import messagebox, scrolledtext
+from tkinter import messagebox, scrolledtext, PhotoImage
 import encrypted_ps_gen
 import ipgen
 import vas
@@ -24,6 +24,9 @@ class CyberSuiteGUI(ctk.CTk):
         # Configure row and column weights for resizing
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
+        
+        # Set application icon - looks for logo.png in the assets folder
+        self.set_app_icon()
         
         self.tabview = ctk.CTkTabview(self, width=780, height=560)
         self.tabview.pack(padx=10, pady=10, fill="both", expand=True)
@@ -241,9 +244,14 @@ class CyberSuiteGUI(ctk.CTk):
         """Copy the provided text to the clipboard"""
         self.clipboard_clear()
         self.clipboard_append(text)
-        # Show a small tooltip or flash effect to indicate successful copy
+        # A small tooltip to indicate successful copy
         messagebox.showinfo("Copied", "Text copied to clipboard!")
         
+    def set_app_icon(self):
+        """Set the application icon using logo.png from the assets folder"""
+    pass
+
+    
     def bind_mousewheel_to_frames(self):
         """Bind mousewheel events to all scrollable frames"""
         def _on_mousewheel(event, widget):
@@ -977,7 +985,7 @@ class CyberSuiteGUI(ctk.CTk):
         # Logo/Banner (ASCII art)
         logo_frame = ctk.CTkFrame(about_scrollable_frame)
         logo_frame.pack(pady=20, padx=20, fill="x")
-        
+
         logo_text = """
   ██████╗██╗   ██╗██████╗ ███████╗██████╗ 
  ██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗
