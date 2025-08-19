@@ -2,18 +2,23 @@
 
 A comprehensive cybersecurity toolkit with both CLI and modern GUI interfaces.
 
+## 📋 Pre-Requisites
+
+- **Python 3.7+**
+- **git** - Version control system
+- **nmap** - Network discovery tool (external)
+
 ## 🌟 Features
 
 ### 🔐 Password Tools
 - **Password Generation**: Create secure random passwords with customizable length
 - **Password Encryption**: Encrypt passwords using Fernet (AES 128) encryption
 - **Password Decryption**: Decrypt previously encrypted passwords
-- **Json format documentation**: Export passwords in JSON format for easy storage and retrieval
+<!-- - **Json format documentation**: Export passwords in JSON format for easy storage and retrieval -->
 
 ### 🌐 IP Address Tools
+- **IP lookup**: Retrieve information about an IP address (e.g., geolocation, ISP)
 - **IP Generation**: Generate random IPv4 and IPv6 addresses
-- **Flag Detection**: Compare generated IPs against known/filtered addresses
-- **Bulk Generation**: Generate multiple IPs with detailed reporting
 
 ### 🔍 Vulnerability Scanner
 - **Port Scanning**: Network port scanning using nmap
@@ -22,6 +27,20 @@ A comprehensive cybersecurity toolkit with both CLI and modern GUI interfaces.
 
 ## 🚀 Installation
 
+### Easy Installation (Windows)
+1. **Download and run the installer**:
+   - Download `install.bat` from this repository
+   - Double-click to run the installer
+   - Shortcuts will be created on your desktop and Start Menu
+
+### Easy Installation (Linux/macOS)
+1. **Download and run the installer**:
+   - Download `install.sh` from this repository
+   - Make it executable: `chmod +x install.sh`
+   - Run it: `./install.sh`
+   - Shortcuts will be created on your desktop and applications menu
+
+### Manual Installation
 1. **Clone the repository**:
    ```bash
    git clone https://github.com/DanielUgoAli/Cyber-Suite.git
@@ -51,15 +70,6 @@ python gui.py
 ```
 
 Or launch GUI from CLI by selecting option 4.
-
-## 📋 Requirements
-
-- **Python 3.7+**
-- **customtkinter** - Modern GUI framework
-- **cryptography** - Password encryption
-- **python-nmap** - Network scanning
-- **requests** - API communication
-- **nmap** - Network discovery tool (external)
 
 ## 🔧 Optional Configuration
 
@@ -97,11 +107,6 @@ Modern dark theme interface with:
 
 ## ⚖️ Legal Notice
 
-This tool is designed for:
-- **Educational purposes**
-- **Authorized security testing**
-- **Personal learning and development**
-
 **Important**: Users are responsible for ensuring compliance with applicable laws and regulations. Only use this tool on systems you own or have explicit permission to test.
 
 ## 🤝 Contributing
@@ -115,7 +120,7 @@ This tool is designed for:
 
 This project is open source. Please use responsibly and ethically.
 
-## 👨‍💻 Author and contributor
+## 👨‍💻 Author and contributors
 
 
 - GitHub: [@DanielUgoAli](https://github.com/DanielUgoAli)
