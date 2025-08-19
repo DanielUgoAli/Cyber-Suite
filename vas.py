@@ -6,11 +6,8 @@ Provides functionality to scan target IPs for open ports and known vulnerabiliti
 import nmap
 import requests
 import json
-import re
 import os
 import ipaddress
-from urllib.parse import quote_plus
-import time
 from typing import List, Tuple, Dict, Union, Optional
 
 
@@ -25,7 +22,6 @@ class VulnerabilityScanner:
             api_key: Optional NVD API key for authentication
         """
         self.api_key = api_key or os.getenv("NVD_API_KEY")
-        self.scan_results = []
     
     def validate_ip(self, ip: str) -> bool:
         """
@@ -60,6 +56,7 @@ class VulnerabilityScanner:
         open_ports = []
         try:
             scanner = nmap.PortScanner()
+            print(f"[*] Starting port scan on {ip}")
             scanner.scan(ip, arguments='-sV')  # Top 1000 ports with version detection
             
             if ip not in scanner.all_hosts():
@@ -74,27 +71,11 @@ class VulnerabilityScanner:
                         version = port_data.get('version', '')
                         banner = f"{product} {version}".strip() or port_data['name']
                         open_ports.append((port, banner))
-        except nmap.PortScannerError as e:
-            print(f"[!] Nmap scan error: {e}")
+                        print(f"[+] Detected open port {port}: {banner}")
         except Exception as e:
-            print(f"[!] Unexpected error during port scan: {e}")
+            print(f"[!] Error during port scan: {e}")
             
         return open_ports
-    
-    def _sanitize_banner(self, banner: str) -> str:
-        """
-        Sanitize banner text to make it safe for API queries.
-        
-        Args:
-            banner: The service banner to sanitize
-            
-        Returns:
-            Sanitized banner string
-        """
-        if not banner:
-            return ""
-        sanitized = re.sub(r'[^\w\s.-]', '', banner)
-        return sanitized[:100]  # Limit length to prevent excessively long queries
     
     def get_cves_with_details(self, banner: str) -> Union[List[Dict], str]:
         """
@@ -106,32 +87,65 @@ class VulnerabilityScanner:
         Returns:
             List of vulnerabilities or status message string
         """
-        safe_banner = self._sanitize_banner(banner)
-        if not safe_banner:
+        if not banner:
             return "No banner information to search"
             
-        url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={quote_plus(safe_banner)}"
+        url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?keywordSearch={banner}"
         
         headers = {}
         if self.api_key:
             headers["apiKey"] = self.api_key
         
-        # Rate limiting to avoid API abuse
-        time.sleep(0.6)  # NVD recommends no more than 5 requests in 30 seconds
-        
         try:
+            print(f"[*] Searching NVD for: {banner}")
             response = requests.get(url, headers=headers, timeout=10)
             
-            if response.status_code == 403:
-                print("[!] API access denied. Check if API key is required or rate limit reached.")
-                return "API access denied"
-                
             if response.status_code != 200:
                 print(f"[!] API request failed with status code {response.status_code}")
-                return f"API request failed: {response.status_code}"
+                return "Error fetching vulnerability data"
                 
-            return self._parse_nvd_response(response.json())
+            data = response.json()
+            vulnerabilities = []
             
+            for item in data.get("vulnerabilities", []):
+                try:
+                    cve_id = item["cve"]["id"]
+                    metrics = item["cve"].get("metrics", {})
+                    description = item["cve"].get("descriptions", [])
+                    desc_text = "No description available"
+                    
+                    # Get English description
+                    for desc in description:
+                        if desc.get("lang") == "en":
+                            desc_text = desc.get("value", "No description available")
+                            break
+                    
+                    score = "N/A"
+                    severity = "Unknown"
+
+                    # Extract CVSS score from metrics
+                    if "cvssMetricV31" in metrics:
+                        metric = metrics["cvssMetricV31"][0]
+                        score = metric["cvssData"]["baseScore"]
+                        severity = metric["cvssData"]["baseSeverity"]
+                    elif "cvssMetricV2" in metrics:
+                        metric = metrics["cvssMetricV2"][0]
+                        score = metric["cvssData"]["baseScore"]
+                        severity = metric.get("baseSeverity", "Unknown")
+
+                    vulnerabilities.append({
+                        "cve": cve_id,
+                        "cvss_score": score,
+                        "severity": severity,
+                        "description": desc_text[:250]
+                    })
+                except Exception as e:
+                    print(f"[!] Error parsing CVE: {e}")
+                    continue
+                    
+            print(f"[+] Found {len(vulnerabilities)} vulnerabilities for {banner}")
+            return vulnerabilities if vulnerabilities else "No vulnerabilities found"
+                
         except requests.RequestException as e:
             print(f"[!] Error fetching CVEs for {banner}: {e}")
         except json.JSONDecodeError as e:
@@ -140,50 +154,6 @@ class VulnerabilityScanner:
             print(f"[!] Unexpected error: {e}")
             
         return "Error fetching vulnerability data"
-    
-    def _parse_nvd_response(self, data: Dict) -> List[Dict]:
-        """
-        Parse the NVD API response and extract vulnerability details.
-        
-        Args:
-            data: JSON response from NVD API
-            
-        Returns:
-            List of parsed vulnerability dictionaries
-        """
-        vulnerabilities = []
-        
-        for item in data.get("vulnerabilities", []):
-            try:
-                cve_id = item["cve"]["id"]
-                metrics = item["cve"].get("metrics", {})
-                description = item["cve"].get("descriptions", [])
-                desc_text = next((d["value"] for d in description if d.get("lang") == "en"), "No description")
-                
-                score = "N/A"
-                severity = "Unknown"
-
-                # Extract CVSS score from metrics
-                if "cvssMetricV31" in metrics:
-                    metric = metrics["cvssMetricV31"][0]
-                    score = metric["cvssData"]["baseScore"]
-                    severity = metric["cvssData"]["baseSeverity"]
-                elif "cvssMetricV2" in metrics:
-                    metric = metrics["cvssMetricV2"][0]
-                    score = metric["cvssData"]["baseScore"]
-                    severity = metric.get("baseSeverity", "Unknown")
-
-                vulnerabilities.append({
-                    "cve": cve_id,
-                    "cvss_score": score,
-                    "severity": severity,
-                    "description": desc_text[:200]  # Limit description length
-                })
-            except KeyError as e:
-                print(f"[!] Error parsing CVE data: {e}")
-                continue
-                
-        return vulnerabilities if vulnerabilities else []
     
     def search_cve(self, banner: str) -> Optional[Dict]:
         """
@@ -260,7 +230,7 @@ class VulnerabilityScanner:
                 json.dump(scan_data, f, indent=4)
             print(f"[+] Full JSON report saved to {report_path}")
             return report_path
-        except IOError as e:
+        except Exception as e:
             print(f"[!] Error saving report: {e}")
             return ""
 
@@ -292,28 +262,38 @@ def main():
     print("[+] Vulnerability Scanner")
     print("[+] ---------------------")
     
-    # Get API key from environment or user input
-    api_key = os.getenv("NVD_API_KEY")
-    if not api_key:
-        print("[*] No NVD API key found in environment. API key is recommended to avoid rate limiting.")
-        api_key = input("[?] Enter NVD API key (press Enter to skip): ").strip() or None
-        
     # Get target IP with validation
     ip = input("[?] Enter target IP address: ")
     
     # Create scanner and run scan
-    scanner = VulnerabilityScanner(api_key)
+    scanner = VulnerabilityScanner()
     if not scanner.validate_ip(ip):
         print("[!] Invalid IP address provided. Exiting.")
         return
     
-    scan_data = scanner.scan_target(ip)
+    results = []
+    for port, banner in scanner.scan_ports(ip):
+        print(f"[*] Scanning Port {port} - {banner}")
+        cve_details = scanner.get_cves_with_details(banner)
+        if isinstance(cve_details, list):
+            print(f"[+] Vulnerabilities found for port {port}: {len(cve_details)}")
+        else:
+            print(f"[-] {cve_details}")
+            cve_details = []
+            
+        results.append({
+            'port': port,
+            'banner': banner,
+            'vulnerabilities': cve_details
+        })
     
     # Save results
-    scanner.save_report(scan_data)
+    report_path = f"scan_report_{ip.replace('.', '_')}.json"
+    with open(report_path, 'w') as f:
+        json.dump({'target': ip, 'results': results}, f, indent=4)
+    print(f"[+] Full JSON report saved to {report_path}")
     
     # Print summary
-    results = scan_data.get('results', [])
     if not results:
         print("[!] No results found.")
         return
