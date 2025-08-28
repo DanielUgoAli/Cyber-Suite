@@ -10,8 +10,8 @@ from datetime import datetime
 
 # Import our modules
 import encrypted_ps_gen
-import ipgen as ip
 import vas
+import ip_scan  # Use ip_scan instead of ipgen
 
 def print_banner():
     """Display the main banner"""
@@ -83,32 +83,76 @@ def password_tool():
             print("❌ Invalid option. Please try again.")
 
 def ip_tool():
-    """Handle IP generation and flagging detection"""
-    print("\n🌐 IP ADDRESS GENERATOR & FLAG DETECTOR")
+    """Handle IP address analysis and scanning"""
+    print("\n🌐 IP ADDRESS ANALYZER & SCANNER")
     print("-" * 40)
     
-    # Use the existing functionality from ip.py
-    user_ips = ip.get_user_ips()
-    count, version = ip.get_user_config()
+    # Get IP address(es) from user
+    ip_input = input("Enter IP addresses to analyze (comma/space separated): ").strip()
+    ip_list = ip_scan.parse_ip_input(ip_input)
     
-    print("\n[*] Generating and checking IPs...\n")
-    generated, flagged = ip.generate_and_compare(count, version, user_ips)
+    if not ip_list:
+        print("❌ No valid IP addresses entered.")
+        return
+        
+    # Ask if user wants to scan ports
+    scan_ports = input("Do you want to scan ports? (y/n): ").lower().strip() == 'y'
     
-    # Display results
-    print("\n=== Generated IP Addresses ===")
-    for ip_addr, ip_type in generated:
-        print(f"- {ip_addr} [{ip_type}]")
+    print("\n[*] Analyzing IP addresses...\n")
     
+    # Create analyzer and analyze IPs
+    analyzer = ip_scan.IPAnalyzer()
+    results = []
+    
+    for ip in ip_list:
+        try:
+            result = analyzer.analyze_ip(ip, scan_ports)
+            results.append(result)
+            
+            # Display basic info
+            classification = result.get("classification", {})
+            is_malicious = classification.get("potentially_malicious", False)
+            is_private = classification.get("private", False)
+            
+            if is_malicious:
+                status = "⚠️  POTENTIALLY MALICIOUS"
+            elif is_private:
+                status = "🏠 PRIVATE"
+            else:
+                status = "🌐 PUBLIC"
+                
+            print(f"\n- {ip} - {status}")
+            
+            # Show geolocation if available
+            geo = result.get("geolocation", {})
+            if geo.get("status") == "success":
+                print(f"  Location: {geo.get('country', 'Unknown')}")
+                print(f"  ISP: {geo.get('isp', 'Unknown')}")
+                
+        except Exception as e:
+            print(f"❌ Error analyzing {ip}: {e}")
+    
+    # Display summary
     print("\n=== Summary Report ===")
-    print(f"Total IPs Generated: {len(generated)}")
-    print(f"Total Flagged IPs Detected: {len(flagged)}")
+    total_ips = len(results)
+    private_ips = sum(1 for r in results if r.get("classification", {}).get("private", False))
+    malicious_ips = sum(1 for r in results if r.get("classification", {}).get("potentially_malicious", False))
     
-    if flagged:
-        print("\nFlagged IPs:")
-        for ip_addr, ip_type in flagged:
-            print(f"- {ip_addr} [{ip_type}]")
-    else:
-        print("✅ No flagged IPs found.")
+    print(f"Total IPs Analyzed: {total_ips}")
+    print(f"Private IPs: {private_ips}")
+    print(f"Potentially Malicious IPs: {malicious_ips}")
+    
+    # If port scanning was enabled, show summary of open ports
+    if scan_ports:
+        all_open_ports = set()
+        for result in results:
+            ports = result.get("ports", {})
+            all_open_ports.update(ports.get("open_ports", []))
+            
+        if all_open_ports:
+            print(f"\nOpen ports detected: {', '.join(map(str, sorted(all_open_ports)))}")
+        else:
+            print("\nNo open ports detected.")
 
 def vulnerability_scanner():
     """Handle vulnerability scanning"""
@@ -117,8 +161,48 @@ def vulnerability_scanner():
     print("⚠️  Note: This tool requires nmap and internet connection")
     
     try:
-        # Use the existing functionality from vas.py
-        vas.main()
+        # Get target IP with validation
+        ip = input("[?] Enter target IP address: ")
+        
+        # Get optional API key
+        api_key = input("[?] Enter NVD API key (or leave blank to skip): ").strip() or None
+        
+        # Create scanner and run scan
+        scanner = vas.VulnerabilityScanner(api_key)
+        if not scanner.validate_ip(ip):
+            print("[!] Invalid IP address provided. Exiting.")
+            return
+        
+        print(f"[*] Scanning target: {ip}")
+        scan_data = scanner.scan_target(ip)
+        
+        results = scan_data.get('results', [])
+        
+        if not results:
+            print("[!] No results found.")
+            return
+        
+        # Save results
+        report_path = scanner.save_report(scan_data)
+        if report_path:
+            print(f"[+] Full report saved to {report_path}")
+        
+        # Print summary
+        print("[+] Scan Summary:")
+        total_vulns = 0
+        for result in results:
+            port = result.get('port', 'unknown')
+            banner = result.get('banner', 'unknown')
+            vulns = result.get('vulnerabilities', [])
+            if isinstance(vulns, list):
+                vuln_count = len(vulns)
+                total_vulns += vuln_count
+            else:
+                vuln_count = 0
+            print(f"  Port {port} - {banner} - Found {vuln_count} vulnerabilities")
+        
+        print(f"\nTotal vulnerabilities found: {total_vulns}")
+        
     except KeyboardInterrupt:
         print("\n❌ Scan interrupted by user.")
     except Exception as e:
@@ -130,7 +214,8 @@ def launch_gui():
     try:
         print("\n🖥️  Launching GUI interface...")
         import gui
-        gui.main()
+        app = gui.CyberSuiteGUI()
+        app.mainloop()
     except ImportError as e:
         print(f"❌ Missing required package for GUI: {e}")
         print("📦 Install GUI dependencies with:")

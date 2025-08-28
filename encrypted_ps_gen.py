@@ -49,38 +49,4 @@ def list_saved_passwords():
         except json.JSONDecodeError:
             return []
 
-# === Run Logic ===
 
-def run():
-    # Generate password
-    password = generate_password()
-    print(f"Generated Password: {password}")
-
-    # Generate encryption key
-    key = generate_key()
-    print(f"Encryption Key: {key.decode()}")
-
-    # Encrypt and save password
-    encrypted = encrypt_password(password, key)
-    print(f"Encrypted Password: {encrypted.decode()}")
-
-    # List saved entries
-    print("\nSaved Entries:")
-    entries = list_saved_passwords()
-    for entry in entries:
-        print(entry)
-
-    # Optional: Decrypt latest
-    print("\nDecryption Test:")
-    if entries:
-        last_entry = entries[-1]
-        try:
-            decrypted = decrypt_password(last_entry["encrypted_password"], last_entry["key"])
-            print(f"Decrypted Password: {decrypted}")
-        except Exception as e:
-            print(f"Failed to decrypt: {e}")
-    else:
-        print("No entries to decrypt.")
-
-if __name__ == "__main__":
-    run()

@@ -4,3 +4,4 @@ python-nmap
 requests
 colorama
 ipaddress
+ipwhois
