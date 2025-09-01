@@ -11,7 +11,7 @@ from colorama import Fore, init
 # Initialize Colorama
 init(autoreset=True)
 
-DB_FILE = "scan_results.db"
+
 
 # IP categorization constants
 KNOWN_MALICIOUS_RANGES = [
@@ -198,26 +198,6 @@ class IPAnalyzer:
                 })
         return results
 
-# --- Database Setup ---
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS scans (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ip TEXT,
-            source TEXT,
-            risk_level TEXT,
-            score INTEGER,
-            flagged INTEGER,
-            isp TEXT,
-            country TEXT,
-            status TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-    """)
-    conn.commit()
-    conn.close()
 
 # --- Deprecated: WHOIS Lookup ---
 def whois_lookup(ip):
@@ -300,17 +280,7 @@ def check_virustotal(ip, api_key):
     except Exception:
         return None
 
-# --- Save to DB ---
-def save_result(result):
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    cursor.execute("""
-        INSERT INTO scans (ip, source, risk_level, score, flagged, isp, country, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (result["ip"], result["source"], result["risk"], result["score"],
-          int(result["flagged"]), result["isp"], result["country"], result["status"]))
-    conn.commit()
-    conn.close()
+
 
 # --- Export Results ---
 def export_results(all_results, geo_results, fmt="txt"):
