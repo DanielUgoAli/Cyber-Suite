@@ -1,6 +1,7 @@
 # 🛡️ Cyber-Suite
 
 A comprehensive cybersecurity toolkit with both CLI and modern GUI interfaces.
+It is a unified application for commonly used external tools
 
 ## 📋 Pre-Requisites
 
